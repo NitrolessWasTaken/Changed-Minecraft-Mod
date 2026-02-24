@@ -55,7 +55,7 @@ public class Pale {
         final boolean wearingMask = AccessorySlots.isWearing(player, itemStack -> itemStack.is(ChangedItems.FACE_MASK.get()));
 
         AtomicInteger localExposure = new AtomicInteger(0);
-        player.level().getEntitiesOfClass(LivingEntity.class, new AABB(player.blockPosition()).inflate(1.5)).forEach(livingEntity -> {
+        player.level().getEntitiesOfClass(LivingEntity.class, new AABB(player.blockPosition()).inflate(2.5)).forEach(livingEntity -> {
             if (player == livingEntity) return;
 
             if (livingEntity.getType().is(ChangedTags.EntityTypes.PALE_SMALL_EXPOSURE) && exposure < 11800)
@@ -101,8 +101,8 @@ public class Pale {
                 player.hurt(ChangedDamageSources.PALE.source(player.level().registryAccess()), 1f);
             }
         } else if (exposure >= THRESHOLD_LARGE_DAMAGE && exposure < THRESHOLD_DEATH) {
-            if (exposure % 1200 < 5) { // 1/2 Heart per 1 minute
-                player.hurt(ChangedDamageSources.PALE.source(player.level().registryAccess()), 1f);
+            if (exposure % 1200 < 5) { // 1 Heart per 1 minute
+                player.hurt(ChangedDamageSources.PALE.source(player.level().registryAccess()), 2f);
             }
         } else if (exposure >= THRESHOLD_DEATH) {
             if (exposure % 200 < 5) { // 1 Heart per 10 seconds
