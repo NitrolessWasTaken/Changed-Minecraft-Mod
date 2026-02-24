@@ -30,18 +30,18 @@ public class Pale {
 
     public static boolean tryCure(Player player) {
         if (ProcessTransfur.isPlayerTransfurred(player)) {
-            setPaleExposure(player, -2000);
+            setPaleExposure(player, -1000);
             return true;
         }
 
         return false;
     }
 
-    public static int THRESHOLD_IMMUNE_MAX = 1200; // How much your immune system can take until Pale begins to take over
-    public static int THRESHOLD_MINIMAL_DAMAGE = 24000; // 1 minecraft day
-    public static int THRESHOLD_SMALL_DAMAGE = 48000; // 2 minecraft days
-    public static int THRESHOLD_LARGE_DAMAGE = 60000; // 2.5 minecraft days
-    public static int THRESHOLD_DEATH = 72000; // 3 minecraft days
+    public static int THRESHOLD_IMMUNE_MAX = 3000; // How much your immune system can take until Pale begins to take over
+    public static int THRESHOLD_MINIMAL_DAMAGE = 72000; // 1 minecraft day
+    public static int THRESHOLD_SMALL_DAMAGE = 120000; // 2 minecraft days
+    public static int THRESHOLD_LARGE_DAMAGE = 240000; // 2.5 minecraft days
+    public static int THRESHOLD_DEATH = 432000; // 3 minecraft days
 
     public static void tickPaleExposure(Player player) {
         if (isCured(player))
@@ -87,19 +87,21 @@ public class Pale {
 
         // VVV effects VVV
         if (exposure >= THRESHOLD_MINIMAL_DAMAGE && exposure < THRESHOLD_SMALL_DAMAGE) {
-            if (exposure % 1200 < 5) { // 1/2 Heart per minute
+            if (exposure % 6000 < 5) { // 1/2 Heart per 5 minutes
                 player.hurt(ChangedDamageSources.PALE.source(player.level().registryAccess()), 1f);
             }
         } else if (exposure >= THRESHOLD_SMALL_DAMAGE && exposure < THRESHOLD_LARGE_DAMAGE) {
-            if (exposure % 600 < 5) { // 1/2 Heart per 30 seconds
+            if (exposure % 2400 < 5) { // 1/2 Heart per 2 minutes
                 player.hurt(ChangedDamageSources.PALE.source(player.level().registryAccess()), 1f);
             }
         } else if (exposure >= THRESHOLD_LARGE_DAMAGE && exposure < THRESHOLD_DEATH) {
-            if (exposure % 300 < 5) { // 1 Heart per 15 seconds
-                player.hurt(ChangedDamageSources.PALE.source(player.level().registryAccess()), 2f);
+            if (exposure % 1200 < 5) { // 1/2 Heart per 1 minute
+                player.hurt(ChangedDamageSources.PALE.source(player.level().registryAccess()), 1f);
             }
         } else if (exposure >= THRESHOLD_DEATH) {
-            player.hurt(ChangedDamageSources.PALE.source(player.level().registryAccess()), 2f); // 1 Heart (like poison II)
+            if (exposure % 400 < 5) { // 1 Heart per 20 seconds
+                player.hurt(ChangedDamageSources.PALE.source(player.level().registryAccess()), 2f);
+            }
         }
     }
 }
