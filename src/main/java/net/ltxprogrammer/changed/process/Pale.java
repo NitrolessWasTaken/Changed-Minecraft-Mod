@@ -58,19 +58,24 @@ public class Pale {
         player.level().getEntitiesOfClass(LivingEntity.class, new AABB(player.blockPosition()).inflate(1.5)).forEach(livingEntity -> {
             if (player == livingEntity) return;
 
-            if (livingEntity.getType().is(ChangedTags.EntityTypes.PALE_SMALL_EXPOSURE))
+            if (livingEntity.getType().is(ChangedTags.EntityTypes.PALE_SMALL_EXPOSURE) && exposure < 11800)
                 localExposure.addAndGet(wearingMask ? 0 : 1);
-            else if (livingEntity.getType().is(ChangedTags.EntityTypes.PALE_LARGE_EXPOSURE))
-                localExposure.addAndGet(wearingMask ? 1 : 2); // Standing next to a zombie will tick you over immune exposure
+            else if (livingEntity.getType().is(ChangedTags.EntityTypes.PALE_LARGE_EXPOSURE)) {
+                if (!wearingMask)
+                    localExposure.addAndGet(2);
+                else if (wearingMask && exposure < 11800)
+                    localExposure.addAndGet(1);
+                else return; // gas mask prevents stage 1
+                }
             else if (livingEntity instanceof Player otherPlayer) {
                 int otherExposure = getPaleExposure(otherPlayer);
                 if (otherExposure < THRESHOLD_IMMUNE_MAX)
                     return;
-                localExposure.addAndGet(1);
-                if (otherExposure >= THRESHOLD_SMALL_DAMAGE)
-                    localExposure.addAndGet(1);
+
+                if (otherExposure >= THRESHOLD_MINIMAL_DAMAGE && exposure < 11800)
+                    localExposure.addAndGet(wearingMask ? 0 : 1);
                 if (otherExposure >= THRESHOLD_LARGE_DAMAGE)
-                    localExposure.addAndGet(1);
+                    localExposure.addAndGet(wearingMask ? 1 : 2);
             }
         });
 
