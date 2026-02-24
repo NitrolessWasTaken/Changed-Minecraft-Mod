@@ -30,7 +30,7 @@ public class Pale {
 
     public static boolean tryCure(Player player) {
         if (ProcessTransfur.isPlayerTransfurred(player)) {
-            setPaleExposure(player, -1);
+            setPaleExposure(player, 0);
             return true;
         }
 
