@@ -75,8 +75,11 @@ public class Pale {
         });
 
         exposure += localExposure.getAcquire();
-        if (exposure >= 0 && exposure < THRESHOLD_IMMUNE_MAX)
+        if (exposure >= 0 && ProcessTransfur.isPlayerTransfurred(player))
             exposure--;
+        if (exposure >= THRESHOLD_IMMUNE_MAX)
+            exposure++;
+
 
         setPaleExposure(player, exposure);
 
