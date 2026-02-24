@@ -25,19 +25,19 @@ public class Pale {
     }
 
     public static boolean isCured(Player player) {
-        return ProcessTransfur.isPlayerTransfurred(player) && getPaleExposure(player) < 0;
+        return getPaleExposure(player) < 0;
     }
 
     public static boolean tryCure(Player player) {
         if (ProcessTransfur.isPlayerTransfurred(player)) {
-            setPaleExposure(player, -1000);
+            setPaleExposure(player, -1);
             return true;
         }
 
         return false;
     }
 
-    public static int THRESHOLD_IMMUNE_MAX = 3000; // How much your immune system can take until Pale begins to take over
+    public static int THRESHOLD_IMMUNE_MAX = 12000; // How much your immune system can take until Pale begins to take over
     public static int THRESHOLD_MINIMAL_DAMAGE = 72000; // 1 minecraft day
     public static int THRESHOLD_SMALL_DAMAGE = 120000; // 2 minecraft days
     public static int THRESHOLD_LARGE_DAMAGE = 240000; // 2.5 minecraft days
@@ -77,8 +77,6 @@ public class Pale {
         exposure += localExposure.getAcquire();
         if (exposure >= 0 && exposure < THRESHOLD_IMMUNE_MAX)
             exposure--;
-        if (exposure >= THRESHOLD_IMMUNE_MAX)
-            exposure++;
 
         setPaleExposure(player, exposure);
 
