@@ -100,7 +100,7 @@ public class Pale {
                 player.hurt(ChangedDamageSources.PALE.source(player.level().registryAccess()), 1f);
             }
         } else if (exposure >= THRESHOLD_DEATH) {
-            if (exposure % 400 < 5) { // 1 Heart per 20 seconds
+            if (exposure % 200 < 5) { // 1 Heart per 10 seconds
                 player.hurt(ChangedDamageSources.PALE.source(player.level().registryAccess()), 2f);
             }
         }
