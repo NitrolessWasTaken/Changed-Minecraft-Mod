@@ -58,12 +58,12 @@ public class Pale {
         player.level().getEntitiesOfClass(LivingEntity.class, new AABB(player.blockPosition()).inflate(2.5)).forEach(livingEntity -> {
             if (player == livingEntity) return;
 
-            if (livingEntity.getType().is(ChangedTags.EntityTypes.PALE_SMALL_EXPOSURE) && exposure < 11800)
+            if (livingEntity.getType().is(ChangedTags.EntityTypes.PALE_SMALL_EXPOSURE) && getPaleExposure(player) < 11800)
                 localExposure.addAndGet(wearingMask ? 0 : 1);
             else if (livingEntity.getType().is(ChangedTags.EntityTypes.PALE_LARGE_EXPOSURE)) {
                 if (!wearingMask)
                     localExposure.addAndGet(2);
-                else if (wearingMask && exposure < 11800) // gas mask prevents threshold cross
+                else if (wearingMask && getPaleExposure(player) < 11800) // gas mask prevents threshold cross
                     localExposure.addAndGet(1);
                 }
             else if (livingEntity instanceof Player otherPlayer) {
@@ -73,7 +73,7 @@ public class Pale {
                 if (otherExposure >= THRESHOLD_MINIMAL_DAMAGE) {
                     if (!wearingMask)
                         localExposure.addAndGet(1);
-                    else if (wearingMask && exposure < 11800) // gas mask prevents threshold cross
+                    else if (wearingMask && getPaleExposure(player) < 11800) // gas mask prevents threshold cross
                         localExposure.addAndGet(1);
                 }
                 if (otherExposure >= THRESHOLD_SMALL_DAMAGE)
