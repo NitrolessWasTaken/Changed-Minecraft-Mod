@@ -97,12 +97,12 @@ public class Pale {
 
         // VVV effects VVV
         if (exposure >= THRESHOLD_MINIMAL_DAMAGE && exposure < THRESHOLD_SMALL_DAMAGE) {
-            if (exposure % 6000 < 5) { // 1/2 Heart per 5 minutes
-                player.hurt(ChangedDamageSources.PALE.source(player.level().registryAccess()), 1f);
+            if (exposure % 6000 < 5) { // 1 Heart per 5 minutes
+                player.hurt(ChangedDamageSources.PALE.source(player.level().registryAccess()), 2f);
             }
         } else if (exposure >= THRESHOLD_SMALL_DAMAGE && exposure < THRESHOLD_LARGE_DAMAGE) {
-            if (exposure % 2400 < 5) { // 1/2 Heart per 2 minutes
-                player.hurt(ChangedDamageSources.PALE.source(player.level().registryAccess()), 1f);
+            if (exposure % 3000 < 5) { // 1 Heart per 2.5 minutes
+                player.hurt(ChangedDamageSources.PALE.source(player.level().registryAccess()), 2f);
             }
         } else if (exposure >= THRESHOLD_LARGE_DAMAGE && exposure < THRESHOLD_DEATH) {
             if (exposure % 1200 < 5) { // 1 Heart per 1 minute
