@@ -15,12 +15,14 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.function.Function;
 
 public abstract class AbstractCustomShapeTallBlock extends AbstractCustomShapeBlock implements DoubleBlockPlace {
     public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
@@ -76,6 +78,18 @@ public abstract class AbstractCustomShapeTallBlock extends AbstractCustomShapeBl
     public void placeAt(LevelAccessor level, BlockState blockState, BlockPos blockPos, int flag) {
         level.setBlock(blockPos, blockState.setValue(HALF, DoubleBlockHalf.LOWER), flag);
         level.setBlock(blockPos.above(), blockState.setValue(HALF, DoubleBlockHalf.UPPER), flag);
+    }
+
+    public static boolean shouldWaterlog(LevelAccessor level, BlockPos pos) {
+        return level.getFluidState(pos).isSourceOfType(Fluids.WATER);
+    }
+
+    public static <T> T getLowerHalf(BlockState state, BlockPos pos, Function<BlockPos, T> function) {
+        return state.getValue(HALF) == DoubleBlockHalf.LOWER ? function.apply(pos) : function.apply(pos.below());
+    }
+
+    public static <T> T getUpperHalf(BlockState state, BlockPos pos, Function<BlockPos, T> function) {
+        return state.getValue(HALF) == DoubleBlockHalf.LOWER ? function.apply(pos.above()) : function.apply(pos);
     }
 
     public static void preventCreativeDropFromBottomPart(Level level, BlockPos pos, BlockState state, Player player) {

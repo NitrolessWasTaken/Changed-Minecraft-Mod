@@ -433,22 +433,37 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
         return isFilled() && getChamberedLatex().isPresent();
     }
 
-    public List<LivingEntity> getEntitiesWithin() {
-        AABB boxNS = new AABB(this.getBlockPos()).inflate(0.0, 14.0 / 16.0, 9.3 / 16.0);
-        AABB boxEW = new AABB(this.getBlockPos()).inflate(9.3 / 16.0, 14.0 / 16.0, 0.0);
+    public <T extends Entity> List<T> getEntitiesWithin(Class<T> clazz) {
+        if (!(this.getBlockState().getBlock() instanceof StasisChamber chamber)) {
+            return List.of();
+        }
+
+        AABB detectionBox = chamber.getDetectionSize(this.getBlockState(), level, this.getBlockPos());
         Level level = getLevel();
         if (level == null)
             return List.of();
-        var list = level.getEntitiesOfClass(LivingEntity.class, boxNS);
-        level.getEntitiesOfClass(LivingEntity.class, boxEW).forEach(entity -> {
-            if (list.contains(entity)) return;
-            list.add(entity);
-        });
-        return list;
+
+        var entities = level.getEntitiesOfClass(clazz, detectionBox);
+        {
+            var iterator = entities.iterator();
+            while (iterator.hasNext()) {
+                var entity = iterator.next();
+                AABB entityBox = entity.getBoundingBox();
+
+                if (!(detectionBox.contains(entityBox.minX, entityBox.minY, entityBox.minZ) &&
+                        detectionBox.contains(entityBox.maxX, entityBox.maxY, entityBox.maxZ)))
+                    iterator.remove();
+            }
+        }
+        return entities;
+    }
+
+    public List<LivingEntity> getEntitiesWithin() {
+        return getEntitiesWithin(LivingEntity.class);
     }
 
     public List<Player> getPlayersWithin() {
-        return getEntitiesWithin().stream()
+        return getEntitiesWithin(Player.class).stream()
                 .filter(entity -> entity instanceof Player)
                 .map(entity -> (Player)entity)
                 .toList();
@@ -703,6 +718,10 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
          * Requires: Chamber door is closed, the chamber is not full, and a fluid is configured.
          */
         FILL("fill", StasisChamberBlockEntity::isClosedAndNotFullAndHasFluid, blockEntity -> {
+            if (blockEntity.getBlockState().getBlock() instanceof StasisChamber chamber) {
+                chamber.markAsActive(blockEntity.getBlockState(), blockEntity.getLevel(), blockEntity.getBlockPos());
+            }
+
             blockEntity.fluidLevelO = blockEntity.fluidLevel;
             blockEntity.fluidLevel += (0.05f / 12.0f); // Take 12 seconds to fill
 
@@ -893,6 +912,7 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
                 return false; // No entities inside, no need to open
             if (blockEntity.getBlockState().getBlock() instanceof StasisChamber chamber) {
                 chamber.openDoor(blockEntity.getBlockState(), blockEntity.getLevel(), blockEntity.getBlockPos());
+                chamber.markAsInactive(blockEntity.getBlockState(), blockEntity.getLevel(), blockEntity.getBlockPos());
             }
             return false;
         }),
