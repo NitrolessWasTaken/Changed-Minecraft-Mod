@@ -1,3 +1,7 @@
+This fork contains minor changes related to the Pale feature.
+
+---
+
 <p align="center">
     <img src="images/icon@400.png" alt="Mod Logo" width="200"><br><br>
     <a href="https://discord.com/invite/MpynqpRN6p" rel="Discord"><img src="/images/discord-custom_vector.svg"></a>
