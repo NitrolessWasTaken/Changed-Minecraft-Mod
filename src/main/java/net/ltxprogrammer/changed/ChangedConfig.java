@@ -121,6 +121,17 @@ public class ChangedConfig {
         public final ForgeConfigSpec.ConfigValue<Boolean> debugFacilitiesEnabled;
         public final ForgeConfigSpec.ConfigValue<Boolean> unlimitedLatexSpread;
 
+        public final ForgeConfigSpec.ConfigValue<Integer> paleImmuneMax;
+        public final ForgeConfigSpec.ConfigValue<Integer> paleMinimalDamageThreshold;
+        public final ForgeConfigSpec.ConfigValue<Integer> paleSmallDamageThreshold;
+        public final ForgeConfigSpec.ConfigValue<Integer> paleLargeDamageThreshold;
+        public final ForgeConfigSpec.ConfigValue<Integer> paleDeathThreshold;
+
+        public final ForgeConfigSpec.ConfigValue<Integer> paleMinimalDamageInterval;
+        public final ForgeConfigSpec.ConfigValue<Integer> paleSmallDamageInterval;
+        public final ForgeConfigSpec.ConfigValue<Integer> paleLargeDamageInterval;
+        public final ForgeConfigSpec.ConfigValue<Integer> paleDeathDamageInterval;
+
         public Server(ForgeConfigSpec.Builder builder) {
             builder.comment("Should transfurred players have a nametag");
             showTFNametags = builder.define("showTFNametags", true);
@@ -144,6 +155,26 @@ public class ChangedConfig {
             debugFacilitiesEnabled = builder.define("debugFacilitiesEnabled", false);
             builder.comment("Should latex spreadnot  be limited around a source.");
             unlimitedLatexSpread = builder.define("unlimitedLatexSpread", false);
+
+            builder.comment("How much you can be exposed to Pale before infection is inevitable. Measured in ticks. Only increases when near entities that spread Pale. (Default: 12000)");
+            paleImmuneMax = builder.defineInRange("paleImmuneMax", 12000, 1, 672000);
+            builder.comment("How long until Pale advances to stage 1 past your immunity threshold. Measured in ticks. (Default: 72000)");
+            paleMinimalDamageThreshold = builder.defineInRange("paleMinimalDamageThreshold", 72000, 1, 672000);
+            builder.comment("How long until Pale advances from stage 1 to stage 2. Measured in ticks. (Default: 72000)");
+            paleSmallDamageThreshold = builder.defineInRange("paleSmallDamageThreshold", 72000, 1, 672000);
+            builder.comment("How long until Pale advances from stage 2 to stage 3. Measured in ticks. (Default: 144000)");
+            paleLargeDamageThreshold = builder.defineInRange("paleLargeDamageThreshold", 144000, 1, 672000);
+            builder.comment("How long until Pale advances from stage 3 to terminal. Measured in ticks. (Default: 144000)");
+            paleDeathThreshold = builder.defineInRange("paleDeathThreshold", 144000, 1, 672000);
+
+            builder.comment("How frequently you should take damage from Pale at stage 1. Measured in ticks. (Default: 6000)");
+            paleMinimalDamageInterval = builder.defineInRange("paleMinimalDamageInterval", 6000, 1, 24000);
+            builder.comment("How frequently you should take damage from Pale at stage 2. Measured in ticks. (Defualt: 3000)");
+            paleSmallDamageInterval = builder.defineInRange("paleSmallDamageInterval", 3000, 1, 24000);
+            builder.comment("How frequently you should take damage from Pale at stage 3. Measured in ticks. (Defualt: 1200)");
+            paleLargeDamageInterval = builder.defineInRange("paleLargeDamageInterval", 1200, 1, 24000);
+            builder.comment("How frequently you should take damage from Pale at terminal stage. Measured in ticks. (Defualt: 1200)");
+            paleDeathDamageInterval = builder.defineInRange("paleDeathDamageInterval", 200, 1, 24000);
         }
 
         public Stream<RegistryElementPredicate<Block>> getBlacklistedCoverBlocks() {

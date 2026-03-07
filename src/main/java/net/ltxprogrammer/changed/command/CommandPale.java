@@ -16,7 +16,7 @@ public class CommandPale {
     public static void registerCommands(RegisterCommandsEvent event) {
         event.getDispatcher().register(Commands.literal("setpaleexposure").requires(p -> p.hasPermission(2))
                 .then(Commands.argument("player", EntityArgument.player())
-                        .then(Commands.argument("exposure", IntegerArgumentType.integer(-1, 432000))
+                        .then(Commands.argument("exposure", IntegerArgumentType.integer(-1, 444000))
                                 .executes(context -> {
                                     Pale.setPaleExposure(EntityArgument.getPlayer(context, "player"), IntegerArgumentType.getInteger(context, "exposure"));
                                     return Command.SINGLE_SUCCESS;
