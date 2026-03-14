@@ -38,6 +38,7 @@
     "item.ArmorItemMixin",
     "item.ItemMixin",
     "item.ItemStackMixin",
+    "item.SaddleItemMixin",
     "network.ClientboundSetEntityLinkPacketMixin",
     "network.FriendlyByteBufMixin",
     "server.ChunkHolderMixin",
@@ -45,6 +46,7 @@
     "server.LevelChunkSectionMixin",
     "server.MinecraftServerMixin",
     "server.ServerEntityMixin",
+    "server.ServerGamePacketListenerImplMixin",
     "server.ServerLevelMixin",
     "server.ServerPlayerGameModeMixin"
   ],

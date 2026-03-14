@@ -153,7 +153,7 @@ public class ChangedConfig {
             bpiSizeMaximumNPC = builder.defineInRange("bpiSizeMaximumNPC", 1.05, 0.05, 1024.0);
             builder.comment("Should the server broadcast facility debug info.");
             debugFacilitiesEnabled = builder.define("debugFacilitiesEnabled", false);
-            builder.comment("Should latex spreadnot  be limited around a source.");
+            builder.comment("Should latex spread not be limited around a source.");
             unlimitedLatexSpread = builder.define("unlimitedLatexSpread", false);
 
             builder.comment("How much you can be exposed to Pale before infection is inevitable. Measured in ticks. Only increases when near entities that spread Pale. (Default: 12000)");

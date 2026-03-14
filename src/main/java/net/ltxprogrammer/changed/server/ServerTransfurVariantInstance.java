@@ -12,7 +12,6 @@ import net.ltxprogrammer.changed.init.ChangedEffects;
 import net.ltxprogrammer.changed.init.ChangedTags;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.PathfinderMob;
@@ -81,7 +80,7 @@ public class ServerTransfurVariantInstance<T extends ChangedEntity> extends Tran
     protected void tickFlying() {
         super.tickFlying();
 
-        if (parent.canGlide && shouldApplyAbilities()) {
+        if (this.canCreativeFly() && shouldApplyAbilities()) {
             if (!host.isSpectator() && host.getAbilities().flying)
                 ChangedCriteriaTriggers.FLYING.trigger(host, ticksFlying);
         }

@@ -11,6 +11,7 @@ import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.block.GluBlock;
 import net.ltxprogrammer.changed.init.ChangedFacilityPieceTypes;
 import net.ltxprogrammer.changed.init.ChangedRegistry;
+import net.ltxprogrammer.changed.init.ChangedTags;
 import net.ltxprogrammer.changed.util.CollectionUtil;
 import net.ltxprogrammer.changed.util.ResourceUtil;
 import net.ltxprogrammer.changed.util.StreamUtil;
@@ -22,10 +23,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
-import net.minecraft.tags.BiomeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.Structure;
@@ -247,8 +246,8 @@ public class FacilityPieces extends SimplePreparableReloadListener<Set<Configure
                 final var pieceBiomes = facilityContext.structureContext.biomeSource().getBiomesWithin(
                         center.getX(), center.getY(), center.getZ(), /* Radius */ 2,
                         facilityContext.structureContext.randomState().sampler());
-                if (pieceBiomes.stream().anyMatch(pieceBiome -> pieceBiome.is(BiomeTags.IS_RIVER) || pieceBiome.is(BiomeTags.IS_OCEAN)))
-                    return Optional.empty(); // Deny pieces generating too close to surface water
+                if (pieceBiomes.stream().anyMatch(pieceBiome -> pieceBiome.is(ChangedTags.Biomes.DENY_FACILITY_PLACEMENT)))
+                    return Optional.empty();
             }
         }
 

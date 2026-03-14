@@ -1,8 +1,11 @@
 package net.ltxprogrammer.changed.init;
 
 import net.ltxprogrammer.changed.Changed;
+import net.ltxprogrammer.changed.ability.GrabEntityAbilityInstance;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.RangedAttribute;
 import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -46,4 +49,20 @@ public class ChangedAttributes {
      */
     public static final RegistryObject<Attribute> FALL_RESISTANCE = REGISTRY.register("fall_resistance",
             () -> new RangedAttribute("attribute.name.changed.fall_resistance", 1.0D, 0.5D, 1024.0D).setSyncable(true));
+
+    public static void modifyEntityAttributes(EntityAttributeModificationEvent event) {
+        event.getTypes().forEach(entityType -> {
+            event.add(entityType, ChangedAttributes.TRANSFUR_TOLERANCE.get());
+            event.add(entityType, ChangedAttributes.GRAB_STRUGGLE_STRENGTH.get(), GrabEntityAbilityInstance.GRAB_STRENGTH_DECAY);
+        });
+
+        event.add(EntityType.PLAYER, ChangedAttributes.TRANSFUR_TOLERANCE.get());
+        event.add(EntityType.PLAYER, ChangedAttributes.TRANSFUR_DAMAGE.get(), 3.0D);
+        event.add(EntityType.PLAYER, ChangedAttributes.GRAB_STRUGGLE_STRENGTH.get(), GrabEntityAbilityInstance.GRAB_STRENGTH_DECAY_PLAYER);
+        event.add(EntityType.PLAYER, ChangedAttributes.SPRINT_SPEED.get(), 1.0D);
+        event.add(EntityType.PLAYER, ChangedAttributes.SNEAK_SPEED.get(), 1.0D);
+        event.add(EntityType.PLAYER, ChangedAttributes.AIR_CAPACITY.get(), 15.0D);
+        event.add(EntityType.PLAYER, ChangedAttributes.JUMP_STRENGTH.get(), 1.0D);
+        event.add(EntityType.PLAYER, ChangedAttributes.FALL_RESISTANCE.get(), 1.0D);
+    }
 }

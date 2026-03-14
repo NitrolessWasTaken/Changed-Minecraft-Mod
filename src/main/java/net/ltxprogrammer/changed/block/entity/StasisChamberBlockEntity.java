@@ -3,10 +3,7 @@ package net.ltxprogrammer.changed.block.entity;
 import com.google.common.collect.ImmutableList;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.block.StasisChamber;
-import net.ltxprogrammer.changed.entity.ChangedEntity;
-import net.ltxprogrammer.changed.entity.SeatEntity;
-import net.ltxprogrammer.changed.entity.TransfurCause;
-import net.ltxprogrammer.changed.entity.TransfurContext;
+import net.ltxprogrammer.changed.entity.*;
 import net.ltxprogrammer.changed.entity.animation.StasisAnimationParameters;
 import net.ltxprogrammer.changed.entity.beast.CustomLatexEntity;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
@@ -48,12 +45,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.WaterFluid;
 import net.minecraft.world.phys.AABB;
+import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -94,16 +93,15 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
     };
 
     public NonNullList<ItemStack> items = NonNullList.withSize(2, ItemStack.EMPTY);
-    private int configuredCustomLatex = 0;
     private int waitDuration = 0;
     private boolean stabilized = false;
     private boolean skipModify = false;
+    private boolean onetimeMenuOpen = true;
 
     protected final ContainerData dataAccess = new ContainerData() {
         public int get(int dataSlot) {
             return switch (dataSlot) {
                 case 0 -> (int)(StasisChamberBlockEntity.this.fluidLevel * 1000);
-                case 1 -> StasisChamberBlockEntity.this.configuredCustomLatex;
                 default -> 0;
             };
         }
@@ -111,12 +109,11 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
         public void set(int dataSlot, int dataValue) {
             switch (dataSlot) {
                 case 0 -> StasisChamberBlockEntity.this.fluidLevel = ((float)dataValue) * 0.001f;
-                case 1 -> StasisChamberBlockEntity.this.configuredCustomLatex = dataValue;
             };
         }
 
         public int getCount() {
-            return 2;
+            return 1;
         }
     };
 
@@ -221,7 +218,6 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
         tag.putFloat("fluidLevel", fluidLevel);
         tag.putFloat("fluidLevelO", fluidLevelO);
         ContainerHelper.saveAllItems(tag, this.items);
-        tag.putInt("configuredCustomLatex", configuredCustomLatex);
         tag.putInt("waitDuration", waitDuration);
         tag.putBoolean("stabilized", stabilized);
         if (entityHolder != null)
@@ -240,7 +236,6 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
         fluidLevelO = tag.getFloat("fluidLevelO");
         this.items = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
         ContainerHelper.loadAllItems(tag, this.items);
-        configuredCustomLatex = tag.getInt("configuredCustomLatex");
         waitDuration = tag.getInt("waitDuration");
         stabilized = tag.getBoolean("stabilized");
         if (tag.contains("entityHolderId") && level != null && level.isClientSide) {
@@ -499,28 +494,33 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
         return players.contains(controller); // Controller is inside the chamber
     }
 
-    public int getConfiguredCustomLatex() {
-        return configuredCustomLatex;
-    }
-
-    public void setConfiguredCustomLatex(int configuredCustomLatex) {
-        this.configuredCustomLatex = configuredCustomLatex;
+    public void applyModifications(CompoundTag modifications) {
         if (currentCommand == ScheduledCommand.MODIFY_ENTITY) {
             getChamberedLatex().ifPresent(entity -> {
                 this.skipModify = true;
-                if (entity.getChangedEntity() instanceof CustomLatexEntity customLatexEntity) {
-                    if (customLatexEntity.getRawFormFlags() == configuredCustomLatex)
-                        return;
 
-                    customLatexEntity.setRawFormFlags(configuredCustomLatex);
-                    ChangedSounds.broadcastSound(entity.getEntity(), ChangedSounds.STASIS_CHAMBER_MODIFY_LATEX, 1.0f, 1.0f);
+                if (entity.getChangedEntity() instanceof ModifiableEntity modifiable) {
+                    var vectors = modifiable.getModificationVectors();
+
+                    AtomicBoolean anyMatch = new AtomicBoolean(false);
+                    modifications.getAllKeys().forEach(key -> {
+                        if (!vectors.containsKey(key))
+                            return;
+
+                        if (vectors.get(key).readFromTag(modifications.get(key)))
+                            anyMatch.set(true);
+                    });
+
+                    if (anyMatch.getAcquire())
+                        ChangedSounds.broadcastSound(entity.getEntity(), ChangedSounds.STASIS_CHAMBER_MODIFY_LATEX, 1.0f, 1.0f);
                 } else ChangedTransfurVariants.Gendered.getOpposite(entity.getSelfVariant()).ifPresent(otherVariant -> {
                     entity.replaceVariant(otherVariant);
                     ChangedSounds.broadcastSound(entity.getEntity(), ChangedSounds.STASIS_CHAMBER_MODIFY_LATEX, 1.0f, 1.0f);
                 });
             });
+
+            markUpdated();
         }
-        markUpdated();
     }
 
     public int getWaitDuration() {
@@ -779,38 +779,41 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
                 return false;
 
             if (blockEntity.getChamberedEntity().map(blockEntity::shouldChamberIdle).orElse(false)) {
-                blockEntity.getChamberedLatex().ifPresent(entity -> {
-                    if (entity.getChangedEntity() instanceof CustomLatexEntity customLatexEntity) {
-                        int currentConfigured = customLatexEntity.getRawFormFlags();
-                        if (blockEntity.configuredCustomLatex == currentConfigured)
-                            return;
-
-                        blockEntity.configuredCustomLatex = currentConfigured;
-                        blockEntity.markUpdated();
-                    }
-                });
-
+                blockEntity.onetimeMenuOpen = false;
                 return true; // Idle while captured entity has panel open
+            }
+
+            if (blockEntity.onetimeMenuOpen && blockEntity.openersCounter.getOpenerCount() <= 0) {
+                blockEntity.onetimeMenuOpen = false;
+
+                boolean playerOpened = blockEntity.getChamberedEntity().map(entity -> {
+                    if (!(entity instanceof ServerPlayer serverPlayer))
+                        return false;
+                    NetworkHooks.openScreen(serverPlayer, blockEntity.getBlockState().getMenuProvider(blockEntity.level, blockEntity.worldPosition), extra -> {
+                        extra.writeBlockPos(blockEntity.worldPosition);
+                        extra.writeBoolean(true);
+                    });
+                    return true;
+                }).orElse(false);
+
+                if (playerOpened)
+                    return true;
             }
 
             if (blockEntity.skipModify) {
                 blockEntity.skipModify = false;
+                blockEntity.onetimeMenuOpen = true;
                 return false;
             }
 
             blockEntity.getChamberedLatex().ifPresent(entity -> {
-                if (entity.getChangedEntity() instanceof CustomLatexEntity customLatexEntity) {
-                    if (customLatexEntity.getRawFormFlags() == blockEntity.configuredCustomLatex)
-                        return;
-
-                    customLatexEntity.setRawFormFlags(blockEntity.configuredCustomLatex);
-                    ChangedSounds.broadcastSound(entity.getEntity(), ChangedSounds.STASIS_CHAMBER_MODIFY_LATEX, 1.0f, 1.0f);
-                } else ChangedTransfurVariants.Gendered.getOpposite(entity.getSelfVariant()).ifPresent(otherVariant -> {
+                ChangedTransfurVariants.Gendered.getOpposite(entity.getSelfVariant()).ifPresent(otherVariant -> {
                     entity.replaceVariant(otherVariant);
                     ChangedSounds.broadcastSound(entity.getEntity(), ChangedSounds.STASIS_CHAMBER_MODIFY_LATEX, 1.0f, 1.0f);
                 });
             });
 
+            blockEntity.onetimeMenuOpen = true;
             return false;
         }),
         /**
@@ -826,6 +829,7 @@ public class StasisChamberBlockEntity extends BaseContainerBlockEntity implement
 
             blockEntity.getChamberedEntity().ifPresent(entity -> {
                 if (TransfurVariant.getEntityVariant(entity) != null) return;
+                if (!entity.getType().is(ChangedTags.EntityTypes.HUMANOIDS)) return;
 
                 ProcessTransfur.transfur(entity, entity.level(), blockEntity.findVariantFromSlots(), true, TransfurContext.hazard(TransfurCause.STASIS_CHAMBER));
                 if (entity.isRemoved() || entity.isDeadOrDying()) { // Transfurring killed entity, replaced with npc
