@@ -121,6 +121,10 @@ public class ChangedConfig {
         public final ForgeConfigSpec.ConfigValue<Boolean> debugFacilitiesEnabled;
         public final ForgeConfigSpec.ConfigValue<Boolean> unlimitedLatexSpread;
 
+        public final ForgeConfigSpec.ConfigValue<Integer> facilityGenerateDepth;
+        public final ForgeConfigSpec.ConfigValue<Integer> facilityRollForSizeAttempts;
+        public final ForgeConfigSpec.ConfigValue<Integer> facilityPlacementAttemptsPerPieceType;
+
         public final ForgeConfigSpec.ConfigValue<Integer> paleImmuneMax;
         public final ForgeConfigSpec.ConfigValue<Integer> paleMinimalDamageThreshold;
         public final ForgeConfigSpec.ConfigValue<Integer> paleSmallDamageThreshold;
@@ -155,6 +159,13 @@ public class ChangedConfig {
             debugFacilitiesEnabled = builder.define("debugFacilitiesEnabled", false);
             builder.comment("Should latex spread not be limited around a source.");
             unlimitedLatexSpread = builder.define("unlimitedLatexSpread", false);
+
+            builder.comment("How many pieces deep should the facility generator generate for (Higher = larger, takes way longer to generate).");
+            facilityGenerateDepth = builder.defineInRange("facility.generateDepth", 20, 1, 64);
+            builder.comment("How many times should the facility generator generate the same facility to maximize size (Lower = faster).");
+            facilityRollForSizeAttempts = builder.defineInRange("facility.rollForSizeAttempts", 1, 1, 256);
+            builder.comment("How many attempts should the facility generator try to place pieces before giving up (Lower = faster).");
+            facilityPlacementAttemptsPerPieceType = builder.defineInRange("facility.placementAttemptsPerPieceType", 8, 1, 256);
 
             builder.comment("How much you can be exposed to Pale before infection is inevitable. Measured in ticks. Only increases when near entities that spread Pale. (Default: 12000)");
             paleImmuneMax = builder.defineInRange("paleImmuneMax", 12000, 1, 672000);

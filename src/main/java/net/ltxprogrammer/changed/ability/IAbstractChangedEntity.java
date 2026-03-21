@@ -15,6 +15,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -24,6 +25,7 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -390,10 +392,27 @@ public interface IAbstractChangedEntity {
 
                 ChangedEntity oldEntity = cached.get();
                 ChangedEntity newEntity = otherVariant.getEntityType().create(getLevel());
-                getLevel().addFreshEntity(newEntity);
+
                 newEntity.teleportTo(oldEntity.getX(), oldEntity.getY(), oldEntity.getZ());
                 newEntity.setYRot(oldEntity.getYRot());
                 newEntity.setXRot(oldEntity.getXRot());
+                getLevel().addFreshEntity(newEntity);
+
+                if (oldEntity.hasCustomName()) {
+                    newEntity.setCustomName(oldEntity.getCustomName());
+                    newEntity.setCustomNameVisible(oldEntity.isCustomNameVisible());
+                    newEntity.setPersistenceRequired();
+                }
+
+                newEntity.setNoAi(oldEntity.isNoAi());
+                newEntity.setLeftHanded(oldEntity.isLeftHanded());
+
+                // Take armor and held items
+                Arrays.stream(EquipmentSlot.values()).forEach(slot -> {
+                    newEntity.setItemSlot(slot, entity.getItemBySlot(slot).copy());
+                });
+
+                newEntity.copyTraitsFrom(IAbstractChangedEntity.forEntity(oldEntity));
                 oldEntity.discard();
 
                 cached.forceValue(newEntity);

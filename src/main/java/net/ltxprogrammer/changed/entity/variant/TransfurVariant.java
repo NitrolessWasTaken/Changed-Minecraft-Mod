@@ -242,7 +242,6 @@ public class TransfurVariant<T extends ChangedEntity> {
                 return IAbstractChangedEntity.forPlayer(player);
             }
         } else if (entity instanceof ChangedEntity changedEntity) {
-            newEntity.getBasicPlayerInfo().copyFrom(changedEntity.getBasicPlayerInfo());
             newEntity.copyTraitsFrom(IAbstractChangedEntity.forEntity(changedEntity));
             // Take armor and held items
             Arrays.stream(EquipmentSlot.values()).forEach(slot -> {

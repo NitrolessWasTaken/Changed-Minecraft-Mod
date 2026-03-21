@@ -7,6 +7,7 @@
   "plugin": "net.ltxprogrammer.changed.mixin.compatibility.ChangedMixinPlugin",
   "mixins": [
     "AttributesLib.AttributeEventsMixin",
+    "CreatureChat.EntityChatDataMixin",
     "Curios.CuriosApiMixin",
     "SleepTight.HumanoidAnimatorMixin"
   ],
@@ -43,6 +44,7 @@
     "Personality.PersonalityClientEventsMixin",
     "PlayerAnimator.AdvancedHumanoidModelMixin",
     "PlayerAnimator.AdvancedHumanoidRendererMixin",
+    "PlayerAnimator.ChangedEntityMixin",
     "PlayerAnimator.HumanoidAnimatorMixin",
     "PresenceFootsteps.PFSolverMixin",
     "PresenceFootsteps.SoundEngineMixin",
