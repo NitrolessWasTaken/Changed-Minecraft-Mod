@@ -77,7 +77,7 @@ public class GrabOverlay {
             if (grabAbility == null) return;
             if (grabAbility.grabbedHasControl) return;
 
-            var tfVariant = grabAbility.entity.getTransfurVariant();
+            var tfVariant = grabAbility.entity.getSelfVariant();
             Color3 barColor;
             if (tfVariant != null) {
                 barColor = getBrightVariantColor(tfVariant.getColors());

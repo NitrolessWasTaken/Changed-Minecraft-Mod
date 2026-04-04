@@ -216,7 +216,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
     }
 
     public Color3 getTransfurColor() {
-        return getChangedEntity().getTransfurColor(this.transfurContext.cause);
+        return getChangedEntity().getTransfurColor(this.transfurContext.cause());
     }
 
     public TransfurVariantInstance(TransfurVariant<T> parent, Player host) {
@@ -706,7 +706,7 @@ public abstract class TransfurVariantInstance<T extends ChangedEntity> {
     protected void tickTransfurProgress() {
         transfurProgressionO = transfurProgression;
         if (transfurProgression < 1f) {
-            transfurProgression += (1.0f / transfurContext.cause.getDuration()) * 0.05f;
+            transfurProgression += (1.0f / transfurContext.cause().getDuration()) * 0.05f;
             if (!host.level().getGameRules().getBoolean(ChangedGameRules.RULE_DO_TRANSFUR_ANIMATION)) {
                 transfurProgressionO = 1f;
                 transfurProgression = 1f;

@@ -247,7 +247,7 @@ public class EventHandlerClient {
                 return;
 
             final int duration = event.livingEntity.level().getGameRules().getBoolean(ChangedGameRules.RULE_DO_TRANSFUR_ANIMATION) ?
-                    (int)(event.context.cause.getDuration() * 20) : 40;
+                    (int)(event.context.cause().getDuration() * 20) : 40;
             event.livingEntity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, duration, 4, false, false));
 
             if (event.oldVariant != null || event.livingEntity.tickCount < 20)

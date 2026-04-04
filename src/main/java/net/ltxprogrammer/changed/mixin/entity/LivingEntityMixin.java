@@ -15,6 +15,7 @@ import net.ltxprogrammer.changed.data.AccessorySlotContext;
 import net.ltxprogrammer.changed.data.AccessorySlotType;
 import net.ltxprogrammer.changed.data.AccessorySlots;
 import net.ltxprogrammer.changed.entity.*;
+import net.ltxprogrammer.changed.entity.ai.EntityAssimilationBehavior;
 import net.ltxprogrammer.changed.entity.latex.SpreadingLatexType;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance;
 import net.ltxprogrammer.changed.fluid.AbstractLatexFluid;
@@ -498,12 +499,23 @@ public abstract class LivingEntityMixin extends Entity implements LivingEntityDa
     @Inject(method = "addAdditionalSaveData", at = @At("RETURN"))
     public void addExtendedData(CompoundTag tag, CallbackInfo ci) {
         tag.put("ChangedAccessorySlots", accessorySlots.save());
+        if (this instanceof PathFinderMobDataExtension ext && ext.isLatexAssimilated()) {
+            tag.putBoolean("ChangedIsAssimilated", true);
+        }
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("RETURN"))
     public void readExtendedData(CompoundTag tag, CallbackInfo ci) {
         if (tag.contains("ChangedAccessorySlots"))
             accessorySlots.load(tag.getCompound("ChangedAccessorySlots"));
+        if ((LivingEntity)(Object)this instanceof PathfinderMob pathfinder &&
+                pathfinder instanceof PathFinderMobDataExtension ext &&
+                tag.contains("ChangedIsAssimilated") &&
+                tag.getBoolean("ChangedIsAssimilated")) {
+            if (!ext.isLatexAssimilated() && ProcessTransfur.getEntityAssimilationBehavior(pathfinder) instanceof EntityAssimilationBehavior.InjectEntityWithTransfurGoals behavior) {
+                behavior.assimilate(pathfinder);
+            }
+        }
     }
 
     @Inject(method = "dropEquipment", at = @At("RETURN"))

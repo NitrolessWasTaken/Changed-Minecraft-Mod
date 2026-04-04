@@ -27,6 +27,7 @@
     "entity.LivingEntityMixin",
     "entity.MobMixin",
     "entity.NearestAttackableTargetGoalMixin",
+    "entity.PathFinderMobMixin",
     "entity.PlayerMixin",
     "entity.ProjectileUtilMixin",
     "entity.ServerPlayerMixin",

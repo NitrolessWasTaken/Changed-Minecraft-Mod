@@ -1,13 +1,16 @@
 package net.ltxprogrammer.changed.entity.variant;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import net.ltxprogrammer.changed.Changed;
 import net.ltxprogrammer.changed.ability.AbstractAbility;
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
+import net.ltxprogrammer.changed.ability.ILatexAssimilatedEntity;
 import net.ltxprogrammer.changed.entity.*;
 import net.ltxprogrammer.changed.init.*;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
+import net.ltxprogrammer.changed.process.TransfurEvents;
 import net.ltxprogrammer.changed.util.Color3;
 import net.ltxprogrammer.changed.util.EntityUtil;
 import net.minecraft.client.Minecraft;
@@ -213,8 +216,21 @@ public class TransfurVariant<T extends ChangedEntity> {
         return replaceEntity(entity, cause == null ? null : cause.getEntity());
     }
 
+    public IAbstractChangedEntity replaceEntity(@NotNull LivingEntity entity, @Nullable ILatexAssimilatedEntity cause) {
+        return replaceEntity(entity, cause == null ? null : cause.getEntity());
+    }
+
+    public IAbstractChangedEntity replaceEntity(@NotNull LivingEntity entity, @Nullable Either<IAbstractChangedEntity, ILatexAssimilatedEntity> cause) {
+        return replaceEntity(entity, cause == null ? null : cause.map(IAbstractChangedEntity::getEntity, ILatexAssimilatedEntity::getEntity));
+    }
+
     public IAbstractChangedEntity replaceEntity(@NotNull LivingEntity entity, @Nullable LivingEntity cause) {
         var newEntity = spawnAtEntity(entity);
+        var event = new TransfurEvents.ReplaceEntityEvent(entity, this, cause, newEntity);
+        Changed.postModEvent(event);
+
+        cause = event.getCauseOfReplacement();
+
         if (entity.hasCustomName()) {
             newEntity.setCustomName(entity.getCustomName());
             newEntity.setCustomNameVisible(entity.isCustomNameVisible());
@@ -235,8 +251,6 @@ public class TransfurVariant<T extends ChangedEntity> {
                 newEntity.discard();
                 var instance = ProcessTransfur.setPlayerTransfurVariant(player, this, TransfurContext.hazard(TransfurCause.GRAB_REPLICATE), 1.0f);
                 instance.willSurviveTransfur = true;
-
-                ProcessTransfur.forceNearbyToRetarget(player.level(), player);
 
                 ProcessTransfur.onNewlyTransfurred(IAbstractChangedEntity.forPlayer(player));
                 return IAbstractChangedEntity.forPlayer(player);
@@ -532,15 +546,6 @@ public class TransfurVariant<T extends ChangedEntity> {
             if (variant.ctor != null && variant.ctor.get().equals(entity.getType()))
                 return variant;
         return null;
-    }
-
-    public static TransfurVariant<?> getEntityTransfur(LivingEntity entity) {
-        return ProcessTransfur.ifPlayerTransfurred(EntityUtil.playerOrNull(entity),
-                variant -> variant.getChangedEntity().getTransfurVariant(), () -> {
-            if (entity instanceof ChangedEntity changedEntity)
-                return changedEntity.getTransfurVariant();
-            return null;
-        });
     }
 
     public static TransfurVariant<?> getEntityVariant(LivingEntity entity) {

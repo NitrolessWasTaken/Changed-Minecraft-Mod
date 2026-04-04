@@ -97,7 +97,7 @@ public abstract class PlayerMixin extends LivingEntity implements PlayerDataExte
 
     @Inject(method = "getHurtSound", at = @At("HEAD"), cancellable = true)
     protected void getHurtSound(DamageSource source, CallbackInfoReturnable<SoundEvent> ci) {
-        if (source.is(ChangedTags.DamageTypes.IS_TRANSFUR))
+        if (source.is(ChangedTags.DamageTypes.IS_TRANSFUR) && source.getEntity() != null)
             ci.setReturnValue(ChangedSounds.TRANSFUR_HURT.get());
     }
 
