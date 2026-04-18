@@ -25,6 +25,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.Foods;
@@ -179,6 +180,7 @@ public class ProcessTransfur {
     }
 
     public static void onNewlyAssimilated(ILatexAssimilatedEntity entity) {
+        forceNearbyToRetarget(entity.getLevel(), entity.getEntity());
         if (Changed.postModEvent(new TransfurEvents.NewlyAssimilatedEntityEvent(entity)))
             return;
 
@@ -312,7 +314,7 @@ public class ProcessTransfur {
 
         else {
             int deltaTicks = Math.max(((player.tickCount - player.getLastHurtByMobTimestamp()) / 8) - 20, 0);
-            float scaledDeltaTicks = Math.max(-(deltaTicks * 0.001f), 0);
+            float scaledDeltaTicks = -Math.max(deltaTicks * 0.001f, 0);
 
             var event = new TransfurEvents.TickPlayerTransfurProgressEvent(player, progress, scaledDeltaTicks);
             if (Changed.postModEvent(event))
@@ -743,15 +745,18 @@ public class ProcessTransfur {
     }
 
     public static void forceNearbyToRetarget(Level level, LivingEntity entity) {
-        for (ChangedEntity changedEntity : level.getEntitiesOfClass(ChangedEntity.class, entity.getBoundingBox().inflate(64))) {
-            if (changedEntity.getLastHurtByMob() == entity) {
-                changedEntity.setLastHurtByMob(null);
+        for (PathfinderMob targettingEntity : level.getEntitiesOfClass(PathfinderMob.class, entity.getBoundingBox().inflate(64))) {
+            if (!(targettingEntity instanceof ChangedEntity) && !ProcessTransfur.isMobAssimilated(targettingEntity))
+                continue;
+
+            if (targettingEntity.getLastHurtByMob() == entity) {
+                targettingEntity.setLastHurtByMob(null);
             }
 
-            if (changedEntity.getTarget() == entity) {
-                changedEntity.setTarget(null);
-                changedEntity.targetSelector.tick();
-                changedEntity.targetSelector.getRunningGoals().forEach(WrappedGoal::stop);
+            if (targettingEntity.getTarget() == entity) {
+                targettingEntity.setTarget(null);
+                targettingEntity.targetSelector.tick();
+                targettingEntity.targetSelector.getRunningGoals().forEach(WrappedGoal::stop);
             }
         }
     }

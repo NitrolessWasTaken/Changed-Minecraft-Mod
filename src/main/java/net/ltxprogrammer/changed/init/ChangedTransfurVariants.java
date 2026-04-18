@@ -206,6 +206,8 @@ public class ChangedTransfurVariants {
     static {
         ProcessTransfur.registerMobAssimilation(EntityType.BEE, EntityAssimilationBehavior.latexAssimilation(1.4, true,
                 TransfurDecider.simpleMobDecider(LATEX_BEE, 3.0f)));
+        ProcessTransfur.registerMobAssimilation(EntityType.RABBIT, EntityAssimilationBehavior.latexAssimilation(2.0, true,
+                TransfurDecider.simpleMobDecider(Gendered.LATEX_RABBITS, 3.0f)));
     }
 
     public static class Gendered {

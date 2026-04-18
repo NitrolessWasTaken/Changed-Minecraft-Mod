@@ -57,6 +57,7 @@ public class ChangedPackets {
         addNetworkMessage(LatexCoverUpdatePacket.class, LatexCoverUpdatePacket::new);
         addNetworkMessage(SectionLatexCoversUpdatePacket.class, SectionLatexCoversUpdatePacket::new);
         addNetworkMessage(CustomLevelEventPacket.class, CustomLevelEventPacket::new);
+        addNetworkMessage(AssimilatedEntitySyncPacket.class, AssimilatedEntitySyncPacket::new);
 
         addNetworkMessage(DebuggerPacket.class, DebuggerPacket::new);
         DebuggerPacket.registerDebugPacket(FacilityAddPiecesPayload.IDENTIFIER, FacilityAddPiecesPayload::new);

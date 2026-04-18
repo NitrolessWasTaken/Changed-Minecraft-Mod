@@ -11,6 +11,7 @@ import net.ltxprogrammer.changed.init.ChangedAnimationEvents;
 import net.ltxprogrammer.changed.init.ChangedGameRules;
 import net.ltxprogrammer.changed.init.ChangedSounds;
 import net.ltxprogrammer.changed.init.ChangedTags;
+import net.ltxprogrammer.changed.network.packet.AssimilatedEntitySyncPacket;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -18,6 +19,7 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.RegistryObject;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -52,6 +54,7 @@ public interface EntityAssimilationBehavior<T extends LivingEntity> {
 
         public void assimilate(T entity) {
             ((PathFinderMobDataExtension)entity).markAsLatexAssimilated(true);
+            Changed.PACKET_HANDLER.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> entity), new AssimilatedEntitySyncPacket(entity.getId(), true));
             final ILatexAssimilatedEntity abstracted = ILatexAssimilatedEntity.forEntity(entity, decider);
 
             final Function<LivingEntity, LatexAssimilationDecision<?>> qualifiedDecider = decider.withAssimilatedMob(entity);
@@ -62,7 +65,7 @@ public interface EntityAssimilationBehavior<T extends LivingEntity> {
                 var decision = qualifiedDecider.apply(target);
                 if (decision == null)
                     return false;
-                return ProcessTransfur.computeAssimilationBehavior(entity, decision) != null;
+                return ProcessTransfur.computeAssimilationBehavior(target, decision) != null;
             };
 
             var targetGoal = new NearestAttackableTargetGoal<>(entity, LivingEntity.class, 10, mustSeeTarget, mustReachTarget, canTransfurTarget);
@@ -94,16 +97,23 @@ public interface EntityAssimilationBehavior<T extends LivingEntity> {
             entity.targetSelector.addGoal(/* Priority */ -1, targetGoal);
             entity.goalSelector.addGoal(/* Priority */ -1, assimilateGoal);
 
-            ChangedSounds.broadcastSound(entity, ChangedSounds.TRANSFUR_BY_LATEX, 1.0f, 1.0f);
             ProcessTransfur.onNewlyAssimilated(abstracted);
         }
 
         @Override
         public @Nullable AssimilationBehavior latexAssimilateVictimBehavior(T assimilationVictim, @NotNull LatexAssimilationDecision<?> decision) {
-            return AssimilationBehavior.instant(assimilationVictim.level(), () -> {
-                assimilate(assimilationVictim);
-                return null;
-            });
+            if (!ProcessTransfur.isMobAssimilated(assimilationVictim)) {
+                return AssimilationBehavior.instant(assimilationVictim.level(), () -> {
+                    assimilate(assimilationVictim);
+                    ChangedSounds.broadcastSound(assimilationVictim, ChangedSounds.TRANSFUR_BY_LATEX, 1.0f, 1.0f);
+                    return null;
+                });
+            } else {
+                var nextBehavior = ProcessTransfur.getDefaultEntityAssimilationBehavior(assimilationVictim);
+                if (nextBehavior == null)
+                    return null;
+                return nextBehavior.latexAssimilateVictimBehavior(assimilationVictim, decision);
+            }
         }
 
         @Override

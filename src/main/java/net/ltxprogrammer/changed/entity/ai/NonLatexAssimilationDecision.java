@@ -6,6 +6,7 @@ import net.ltxprogrammer.changed.entity.ChangedEntity;
 import net.ltxprogrammer.changed.entity.TransfurCause;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.init.ChangedDamageSources;
+import net.ltxprogrammer.changed.init.ChangedSounds;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -63,6 +64,7 @@ public record NonLatexAssimilationDecision<T extends ChangedEntity>(TransfurVari
                 transfurProgress,
                 () -> {
                     var newEntity = transfurVariant.replaceEntity(target, sourceEntity);
+                    ChangedSounds.broadcastSound(newEntity.getEntity(), transfurVariant.sound, 1.0f, 1.0f);
                     postTransfurListener.accept(newEntity);
                     return newEntity;
                 });

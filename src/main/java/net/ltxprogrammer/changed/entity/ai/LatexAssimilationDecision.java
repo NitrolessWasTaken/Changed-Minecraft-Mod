@@ -7,6 +7,7 @@ import net.ltxprogrammer.changed.entity.ChangedEntity;
 import net.ltxprogrammer.changed.entity.TransfurContext;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
 import net.ltxprogrammer.changed.init.ChangedDamageSources;
+import net.ltxprogrammer.changed.init.ChangedSounds;
 import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.damagesource.DamageSource;
@@ -115,6 +116,7 @@ public record LatexAssimilationDecision<T extends ChangedEntity>(DecisionStrengt
                 () -> {
                     var newEntity = transfurVariant.replaceEntity(target, transfurSource);
                     ProcessTransfur.onAssimilateEntity(transfurSource);
+                    ChangedSounds.broadcastSound(newEntity.getEntity(), transfurVariant.sound, 1.0f, 1.0f);
                     postTransfurListener.accept(newEntity);
                     return newEntity;
                 });
@@ -133,6 +135,7 @@ public record LatexAssimilationDecision<T extends ChangedEntity>(DecisionStrengt
 
                     transfurSource.replaceVariant(transfurVariant);
                     ProcessTransfur.onAbsorbEntity(transfurSource);
+                    ChangedSounds.broadcastSound(transfurSource.getEntity(), transfurVariant.sound, 1.0f, 1.0f);
                     postTransfurListener.accept(transfurSource);
                     return transfurSource;
                 });
@@ -144,7 +147,15 @@ public record LatexAssimilationDecision<T extends ChangedEntity>(DecisionStrengt
                 transfurProgress,
                 () -> {
                     var newEntity = transfurVariant.replaceEntity(target, transfurSource);
+
+                    if (transfurSource.getEntity() instanceof Player player) { // Emergency Player check to prevent discarding player
+                        ProcessTransfur.killPlayerByAbsorption(player, transfurSource.getEntity());
+                    } else {
+                        transfurSource.getEntity().discard();
+                    }
+
                     ProcessTransfur.onAbsorbEntity(newEntity);
+                    ChangedSounds.broadcastSound(newEntity.getEntity(), transfurVariant.sound, 1.0f, 1.0f);
                     postTransfurListener.accept(newEntity);
                     return newEntity;
                 });

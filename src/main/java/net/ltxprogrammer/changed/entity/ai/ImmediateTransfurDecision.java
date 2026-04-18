@@ -4,6 +4,7 @@ import net.ltxprogrammer.changed.ability.IAbstractChangedEntity;
 import net.ltxprogrammer.changed.entity.ChangedEntity;
 import net.ltxprogrammer.changed.entity.TransfurCause;
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant;
+import net.ltxprogrammer.changed.init.ChangedSounds;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 
@@ -67,6 +68,7 @@ public record ImmediateTransfurDecision<T extends ChangedEntity>(TransfurVariant
         final var sourceEntity = source != null ? source.getEntity() : null;
         return AssimilationBehavior.instant(target.level(), () -> {
             var newEntity = transfurVariant.replaceEntity(target, sourceEntity);
+            ChangedSounds.broadcastSound(newEntity.getEntity(), transfurVariant.sound, 1.0f, 1.0f);
             postTransfurListener.accept(newEntity);
             return newEntity;
         });
