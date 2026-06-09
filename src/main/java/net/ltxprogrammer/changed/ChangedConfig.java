@@ -64,6 +64,7 @@ public class ChangedConfig {
         public final ForgeConfigSpec.ConfigValue<Boolean> fastAndCheapLatexBlocks;
         public final ForgeConfigSpec.ConfigValue<TransfurProgressOverlay.Position> transfurMeterPosition;
         public final ForgeConfigSpec.ConfigValue<Boolean> renderDripParticlesWithNormal;
+        public final ForgeConfigSpec.ConfigValue<Boolean> latexBlocksDrip;
 
         public final BasicPlayerInfo basicPlayerInfo = new BasicPlayerInfo();
 
@@ -88,6 +89,8 @@ public class ChangedConfig {
             transfurMeterPosition = builder.defineEnum("transfurMeterPosition", TransfurProgressOverlay.Position.BOTTOM_LEFT);
             builder.comment("Disable this to test fix for black drip particles (https://github.com/LtxProgrammer/Changed-Minecraft-Mod/issues/1291)");
             renderDripParticlesWithNormal = builder.define("renderDripParticlesWithNormal", true);
+            builder.comment("Should latex blocks and latex covered blocks drip latex");
+            latexBlocksDrip = builder.define("latexBlocksDrip", true);
         }
 
         @Override
@@ -120,6 +123,7 @@ public class ChangedConfig {
         public final ForgeConfigSpec.ConfigValue<Double> bpiSizeMaximumNPC;
         public final ForgeConfigSpec.ConfigValue<Boolean> debugFacilitiesEnabled;
         public final ForgeConfigSpec.ConfigValue<Boolean> unlimitedLatexSpread;
+        public final ForgeConfigSpec.ConfigValue<Boolean> doMobAssimilation;
 
         public final ForgeConfigSpec.ConfigValue<Integer> facilityGenerateDepth;
         public final ForgeConfigSpec.ConfigValue<Integer> facilityRollForSizeAttempts;
@@ -159,6 +163,8 @@ public class ChangedConfig {
             debugFacilitiesEnabled = builder.define("debugFacilitiesEnabled", false);
             builder.comment("Should latex spread not be limited around a source.");
             unlimitedLatexSpread = builder.define("unlimitedLatexSpread", false);
+            builder.comment("Should latexes be able to assimilate certain mobs to become a transfur source.");
+            doMobAssimilation = builder.define("doMobAssimilation", true);
 
             builder.comment("How many pieces deep should the facility generator generate for (Higher = larger, takes way longer to generate).");
             facilityGenerateDepth = builder.defineInRange("facility.generateDepth", 20, 1, 64);

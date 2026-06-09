@@ -21,6 +21,7 @@ import net.ltxprogrammer.changed.process.ProcessTransfur;
 import net.ltxprogrammer.changed.util.Cacheable;
 import net.ltxprogrammer.changed.util.Color3;
 import net.ltxprogrammer.changed.util.UniversalDist;
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -31,8 +32,8 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -64,7 +65,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -198,8 +198,28 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(DATA_TARGET_ID, OptionalInt.empty());
-        this.entityData.define(DATA_LOCAL_VARIANT_INFO, BasicPlayerInfo.random(this.random, this));
+        this.entityData.define(DATA_LOCAL_VARIANT_INFO, new BasicPlayerInfo());
         this.entityData.define(DATA_CHANGED_ENTITY_FLAGS, (byte)0);
+    }
+
+    protected void initializeBPI(BasicPlayerInfo info, RandomSource random) {
+        info.setHairColor(Util.getRandom(BasicPlayerInfo.HAIR_COLORS, random));
+        info.setLeftIrisColor(Util.getRandom(BasicPlayerInfo.IRIS_COLORS, random));
+        info.setRightIrisColor(random.nextFloat() > 0.05f ? info.getLeftIrisColor() : Util.getRandom(BasicPlayerInfo.IRIS_COLORS, random)); // 5% for dichrome eyes
+        info.setEyeStyle(Util.getRandom(EyeStyle.values(), random));
+        info.setOverrideOthersToMatchStyle(false);
+        float min = BasicPlayerInfo.getSizeMinimum(this);
+        float max = BasicPlayerInfo.getSizeMaximum(this);
+        info.setSize(random.nextFloat() * (max - min) + min);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public @Nullable SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroup, @Nullable CompoundTag tag) {
+        var info = new BasicPlayerInfo();
+        initializeBPI(info, this.random);
+        this.entityData.set(DATA_LOCAL_VARIANT_INFO, info);
+        return super.finalizeSpawn(level, difficulty, spawnType, spawnGroup, tag);
     }
 
     @Override
@@ -622,31 +642,58 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
             return true;
     }
 
-    @Override
-    protected void registerGoals() {
-        super.registerGoals();
+    @Nullable
+    protected Goal makeMeleeTransfurGoal() {
+        return new MeleeAttackGoal(this, 0.4, false);
+    }
 
-        final ChangedEntity self = this;
-        this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 0.4, false));
-        this.goalSelector.addGoal(2, new RandomStrollGoal(this, 0.3, 120, false));
-        this.goalSelector.addGoal(3, new LeapAtTargetGoal(this, 0.4f) {
+    @Nullable
+    protected Goal makeWanderGoal() {
+        return new RandomStrollGoal(this, 0.3, 120, false);
+    }
+
+    @Nullable
+    protected Goal makeLeapAtTargetGoal() {
+        return new LeapAtTargetGoal(this, 0.4f) {
             public boolean canUse() {
-                if (self.getTarget() != null && self.getTarget().position().y() > self.position().y)
+                if (ChangedEntity.this.getTarget() != null && ChangedEntity.this.getTarget().position().y() > ChangedEntity.this.position().y)
                     return super.canUse();
                 else
                     return false;
             }
-        });
+        };
+    }
+
+    @Nullable
+    protected Goal makeHurtByTargetGoal() {
+        return new HurtByTargetGoal(this);
+    }
+
+    @Nullable
+    protected Goal makeFloatGoal() {
+        return new FloatGoal(this);
+    }
+
+    @Override
+    protected void registerGoals() {
+        super.registerGoals();
+
+        var meleeGoal = this.makeMeleeTransfurGoal();
+        if (meleeGoal != null)
+            this.goalSelector.addGoal(1, meleeGoal);
+        var wanderGoal = this.makeWanderGoal();
+        if (wanderGoal != null)
+            this.goalSelector.addGoal(2, wanderGoal);
+        var leapGoal = this.makeLeapAtTargetGoal();
+        if (leapGoal != null)
+            this.goalSelector.addGoal(3, leapGoal);
         if (!this.getType().is(ChangedTags.EntityTypes.ARMLESS) && GoalUtils.hasGroundPathNavigation(this))
             this.goalSelector.addGoal(4, new OpenDoorGoal(this, true));
         this.goalSelector.addGoal(4, new UseAbilityGoal(Cacheable.of(() -> abilities), this));
 
-        if (this instanceof WhiteLatexEntity)
-            this.targetSelector.addGoal(1, new HurtByTargetGoal(this, WhiteLatexEntity.class).setAlertOthers());
-        else if (this instanceof AbstractDarkLatexEntity)
-            this.targetSelector.addGoal(1, new HurtByTargetGoal(this, AbstractDarkLatexEntity.class).setAlertOthers());
-        else
-            this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
+        var hurtByTargetGoal = this.makeHurtByTargetGoal();
+        if (hurtByTargetGoal != null)
+            this.targetSelector.addGoal(1, hurtByTargetGoal);
 
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, ChangedEntity.class, true, this::targetSelectorTest));
         if (this.getType().is(ChangedTags.EntityTypes.LATEX)) {
@@ -657,8 +704,9 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, ChangedEntity.class, 7.0F, 0.2F));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Villager.class, 7.0F, 0.2F));
-        if (!(this instanceof AquaticEntity))
-            this.goalSelector.addGoal(5, new FloatGoal(this));
+        var floatGoal = this.makeFloatGoal();
+        if (floatGoal != null)
+            this.goalSelector.addGoal(5, floatGoal);
         if (this instanceof PowderSnowWalkable)
             this.goalSelector.addGoal(5, new ChangedClimbOnTopOfPowderSnowGoal(this, this.level()));
     }
@@ -863,13 +911,6 @@ public abstract class ChangedEntity extends Monster implements EntityShape.Provi
 
     public float getHorizontalSpringOffset() {
         return 0f;
-    }
-
-    @Override
-    public boolean hurt(@NotNull DamageSource source, float amount) {
-        if (this.tickCount < 30)
-            return false; //
-        return super.hurt(source, amount);
     }
 
     public double getPassengersRidingOffset() {
